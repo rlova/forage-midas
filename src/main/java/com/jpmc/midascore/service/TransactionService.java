@@ -19,11 +19,14 @@ public class TransactionService {
 
     private final UserRecordRepository userRepository;
     private final TransactionRecordRepository transactionRepository;
+    private final IncentiveService incentiveService;
 
     public TransactionService(UserRecordRepository userRepository,
-                              TransactionRecordRepository transactionRepository) {
+                              TransactionRecordRepository transactionRepository,
+                              IncentiveService incentiveService) {
         this.userRepository = userRepository;
         this.transactionRepository = transactionRepository;
+        this.incentiveService = incentiveService;
     }
 
     @Transactional
@@ -56,17 +59,21 @@ public class TransactionService {
             return false;
         }
 
-        // 4. Update balances
-        sender.setBalance(senderBalance - amountFloat);
-        recipient.setBalance(recipient.getBalance() + amountFloat);
+        // 4. Get incentive from API
+        float incentiveFloat = incentiveService.getIncentive(transaction);
 
-        // 5. Save the updated users
+        // 5. Update balances
+        sender.setBalance(senderBalance - amountFloat);
+        recipient.setBalance(recipient.getBalance() + amountFloat + incentiveFloat);
+
+        // 6. Save the updated users
         userRepository.save(sender);
         userRepository.save(recipient);
 
-        // 6. Save the transaction record
+        // 7. Save the transaction record
         BigDecimal amount = BigDecimal.valueOf(amountFloat);
-        TransactionRecord record = new TransactionRecord(sender, recipient, amount);
+        BigDecimal incentive = BigDecimal.valueOf(incentiveFloat);
+        TransactionRecord record = new TransactionRecord(sender, recipient, amount,incentive);
         transactionRepository.save(record);
 
         logger.info("Transaction processed: {} -> {} (amount: {})",

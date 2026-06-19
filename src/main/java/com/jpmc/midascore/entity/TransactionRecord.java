@@ -24,16 +24,20 @@ public class TransactionRecord {
     private BigDecimal amount;
 
     @Column(nullable = false)
+    private BigDecimal incentive;
+
+    @Column(nullable = false)
     private LocalDateTime timestamp;
 
     public TransactionRecord() {
         this.timestamp = LocalDateTime.now();
     }
 
-    public TransactionRecord(UserRecord sender, UserRecord recipient, BigDecimal amount) {
+    public TransactionRecord(UserRecord sender, UserRecord recipient, BigDecimal amount, BigDecimal incentive) {
         this.sender = sender;
         this.recipient = recipient;
         this.amount = amount;
+        this.incentive = incentive != null ? incentive : BigDecimal.ZERO;
         this.timestamp = LocalDateTime.now();
     }
 
